@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citation Manager</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- ICONS (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg: #FFFDF5;
+            --text: #1E293B;
+            --text-muted: #64748B;
+            --card-bg: #FFFFFF;
+            --accent: #8B5CF6;
+            --secondary: #F472B6;
+            --tertiary: #FBBF24;
+            --border-col: #1E293B;
+            --input-border: #CBD5E1;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-pill: 999px;
+            --border-width: 2px;
+            --shadow-hard: 4px 4px 0px 0px var(--border-col);
+            --shadow-hover: 6px 6px 0px 0px var(--border-col);
+            --shadow-active: 2px 2px 0px 0px var(--border-col);
+            --font-head: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'Consolas', 'Monaco', monospace;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg);
+            background-image: radial-gradient(var(--input-border) 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: var(--text);
+            padding: 60px 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h1 {
+            font-family: var(--font-head);
+            font-weight: 800;
+            font-size: 3rem;
+            color: var(--text);
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+            text-shadow: 2px 2px 0px var(--tertiary);
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            border: var(--border-width) solid var(--border-col);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-hard);
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            border: var(--border-width) solid var(--input-border);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: block;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 4px 4px 0px 0px var(--accent);
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        #stats {
+            font-family: var(--font-head);
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button.run {
+            background: var(--accent);
+            color: white;
+            border: var(--border-width) solid var(--border-col);
+            padding: 12px 32px;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-head);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: var(--shadow-hard);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button.run:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: var(--shadow-hover);
+            background: #7c3aed;
+        }
+
+        button.run:active {
+            transform: translate(2px, 2px);
+            box-shadow: var(--shadow-active);
+        }
+
+        .grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: var(--border-width) solid var(--border-col);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-hard);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            z-index: 5;
+        }
+
+        .card-header {
+            background: var(--bg);
+            padding: 15px 20px;
+            border-bottom: var(--border-width) solid var(--border-col);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .source-type {
+            font-family: var(--font-head);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--secondary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            font-weight: 800;
+            border: 1px solid var(--border-col);
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-title {
+            font-family: var(--font-head);
+            font-weight: 700;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+            color: var(--text);
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px dashed var(--input-border);
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .lbl {
+            width: 80px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .val {
+            flex-grow: 1;
+            font-family: var(--font-mono);
+            color: var(--text);
+            word-break: break-all;
+            margin-right: 10px;
+        }
+
+        .copy-btn {
+            background: white;
+            border: 1px solid var(--border-col);
+            color: var(--text);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: var(--font-head);
+            min-width: 50px;
+            transition: all 0.1s;
+            box-shadow: 2px 2px 0px var(--border-col);
+        }
+
+        .copy-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px var(--border-col);
+            background: var(--tertiary);
+        }
+
+        .copy-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--border-col);
+        }
+
+        .copy-btn.copied {
+            background: #22c55e;
+            color: white;
+            border-color: #14532d;
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+
+        .dates {
+            display: flex;
+            border-top: var(--border-width) solid var(--border-col);
+            background: #f8fafc;
+        }
+
+        .date-group {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .date-group.pub {
+            border-right: var(--border-width) solid var(--border-col);
+            background: #eff6ff;
+        }
+
+        .date-group.acc {
+            background: #fffbeb;
+        }
+
+        .date-head {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .date-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .date-btns .copy-btn {
+            flex: 1;
+            padding: 8px 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-col);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Citation <span>Manager</span></h1>
+        <p class="subtitle">Paragraph-Proof Version. Ignoriert Fließtext automatisch.</p>
+
+        <div class="controls">
+            <textarea id="input" placeholder="Titel; Autor; Jahr/URL..."></textarea>
+            <div class="action-bar">
+                <div id="stats">
+                    <i data-lucide="info" size="16"></i>
+                    <span>Warte auf Eingabe...</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="run" onclick="process()">
+                        <span>Vorschau</span>
+                        <i data-lucide="search" size="18"></i>
+                    </button>
+                    <button class="run" onclick="downloadXML()" style="background: #10b981;">
+                        <span>Download XML</span>
+                        <i data-lucide="download" size="18"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="output" class="grid"></div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function getParsedData() {
+            const text = document.getElementById('input').value;
+            const lines = text.split('\n');
+            const uniqueMap = new Map();
+            let totalValid = 0; // Counts total valid lines before deduplication
+
+            lines.forEach(line => {
+                line = line.trim();
+
+                // 1. Skip if no semicolon
+                if (!line.includes(';')) return;
+
+                // 2. Skip if it's too long (probably a note paragraph)
+                if (line.length > 550) return;
+
+                // 3. Signal Check: Must have a URL or a 4-digit Year (19xx or 20xx)
+                const hasUrl = line.includes('http') || line.includes('doi.org');
+                const hasYear = line.match(/\b(19|20)\d{2}\b/);
+
+                if (!hasUrl && !hasYear) return;
+
+                const parsed = parseLine(line);
+                if (!parsed) return;
+
+                // Mark as valid source found
+                totalValid++;
+
+                // Key for deduplication
+                const key = (parsed.title + parsed.author).toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (!uniqueMap.has(key)) {
+                    uniqueMap.set(key, parsed);
+                } else {
+                    const existing = uniqueMap.get(key);
+                    if (!existing.url && parsed.url) uniqueMap.set(key, parsed);
+                }
+            });
+
+            // Sort alphabetically by Author
+            const sortedData = Array.from(uniqueMap.values()).sort((a, b) => {
+                const nameA = a.author.toLowerCase();
+                const nameB = b.author.toLowerCase();
+                return nameA.localeCompare(nameB, 'de', { sensitivity: 'base' });
+            });
+
+            return { data: sortedData, total: totalValid };
+        }
+
+        function parseLine(line) {
+            let parts = line.split(';').map(s => s.trim()).filter(s => s !== "");
+            if (parts.length < 2) return null;
+
+            let obj = {
+                container: "", title: "", author: "", url: "", pages: "",
+                pubD: "", pubM: "", pubY: "",
+                accD: "", accM: "", accY: "",
+                type: "Website"
+            };
+
+            // Extract URL
+            let urlIdx = parts.findIndex(p => p.startsWith('http') || p.startsWith('doi'));
+            if (urlIdx !== -1) {
+                obj.url = parts[urlIdx];
+                parts.splice(urlIdx, 1);
+                obj.type = "Website";
+            } else {
+                obj.type = "Buch/Print";
+            }
+
+            // Extract Access Date (from end)
+            const dateRegex = /(\d{1,2})\.?\s+([a-zA-ZäöüÄÖÜ]+)\s+(\d{4})/;
+            if (parts.length > 0) {
+                let lastPart = parts[parts.length - 1];
+                let match = lastPart.match(dateRegex);
+                if (match && parseInt(match[3]) >= 2000) {
+                    obj.accD = match[1].padStart(2, '0');
+                    obj.accM = match[2];
+                    obj.accY = match[3];
+                    parts.pop();
+                }
+            }
+
+            // Extract Pages
+            let pageIdx = parts.findIndex(p => p.match(/^S\.|^pp\.|^\d+\s*-\s*\d+$/));
+            if (pageIdx !== -1) {
+                obj.pages = parts[pageIdx].replace(/S\.|pp\./g, '').trim();
+                parts.splice(pageIdx, 1);
+            }
+
+            // Extract Publication Year/Date
+            let pubIdx = -1;
+            for (let i = parts.length - 1; i >= 0; i--) {
+                let p = parts[i];
+                let mFull = p.match(dateRegex);
+                if (mFull) {
+                    let y = parseInt(mFull[3]);
+                    if (y >= 1900 && y <= 2030) {
+                        obj.pubD = mFull[1].padStart(2, '0');
+                        obj.pubM = mFull[2];
+                        obj.pubY = mFull[3];
+                        pubIdx = i; break;
+                    }
+                } else if (p.match(/^\d{4}$/)) {
+                    let y = parseInt(p);
+                    if (y >= 1900 && y <= 2030) {
+                        obj.pubY = p; pubIdx = i; break;
+                    }
+                }
+            }
+            if (pubIdx !== -1) parts.splice(pubIdx, 1);
+
+            // Filter out 'arXiv' text noise if present in parts
+            parts = parts.filter(p => !p.toLowerCase().includes('arxiv') && !p.toLowerCase().includes('doi.org'));
+
+            // === SPECIAL HANDLING FOR ARXIV ===
+            if (obj.url.toLowerCase().includes('arxiv.org')) {
+                obj.container = "arXiv.org";
+                // Assumes input is: Title; Author; [Year/URL]
+                if (parts.length >= 2) {
+                    obj.title = parts[0];
+                    obj.author = parts[1];
+                } else {
+                    obj.title = parts[0];
+                    obj.author = "ohne Autor";
+                }
+
+                // Safety check for author
+                if (obj.author && (obj.author.match(/^\d+$/) || obj.author.length < 2)) {
+                    obj.author = "ohne Autor";
+                }
+                return obj;
+            }
+            // ==================================
+
+            // Standard Assignment Logic
+            if (obj.type === 'Website') {
+                if (parts.length >= 3) { obj.container = parts[0]; obj.title = parts[1]; obj.author = parts[2]; }
+                else if (parts.length === 2) { obj.container = parts[0]; obj.title = parts[1]; obj.author = "ohne Autor"; }
+                else { obj.title = parts[0]; obj.author = "ohne Autor"; }
+            } else {
+                if (parts.length >= 3) { obj.title = parts[0]; obj.author = parts[1]; obj.container = parts[2]; }
+                else if (parts.length === 2) { obj.title = parts[0]; obj.author = parts[1]; }
+                else { obj.title = parts[0]; obj.author = "ohne Autor"; }
+            }
+
+            if (obj.author && (obj.author.match(/^\d+$/) || obj.author.length < 2)) {
+                obj.author = "ohne Autor";
+            }
+
+            return obj;
+        }
+
+        function process() {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+
+            // Destructure result from getParsedData
+            const { data, total } = getParsedData();
+
+            const statsEl = document.getElementById('stats');
+            if (data.length > 0) {
+                // Modified status message
+                statsEl.innerHTML = `<i data-lucide="check-circle" color="#22c55e"></i> <b>${total}</b> Quellen | <b>${data.length}</b> Einzigartig`;
+            } else {
+                statsEl.innerHTML = `<i data-lucide="alert-circle" color="#ef4444"></i> Keine gültigen Quellen.`;
+            }
+            lucide.createIcons();
+            data.forEach(item => renderCard(item, output));
+            lucide.createIcons();
+        }
+
+        function renderCard(item, container) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            let html = `<div class="card-header"><span class="header-title" title="${item.title}">${item.title}</span><span class="source-type">${item.type}</span></div>`;
+            const addRow = (label, val) => {
+                if (!val) return '';
+                const safeVal = val.replace(/'/g, "\\'");
+                return `<div class="row"><div class="lbl">${label}</div><div class="val">${val}</div><button class="copy-btn" onclick="copy(this, '${safeVal}')">Kopie</button></div>`;
+            }
+            html += addRow('Titel', item.title);
+            html += addRow('Autor', item.author);
+            if (item.container) {
+                const label = item.type === 'Website' ? 'Webseite' : 'Verlag';
+                html += addRow(label, item.container);
+            }
+            html += addRow('URL', item.url);
+            if (item.pages) html += addRow('Seiten', item.pages);
+
+            let pubY = item.pubY || 'n.d.';
+            let accY = item.accY ? `${item.accD || '??'}.${item.accM || '??'}.${item.accY}` : 'n.d.';
+
+            html += `<div class="dates"><div class="date-group pub"><div class="date-head">Erschienen</div><div style="text-align:center; font-weight:bold;">${pubY}</div></div><div class="date-group acc"><div class="date-head">Abruf</div><div style="text-align:center; font-weight:bold;">${accY}</div></div></div>`;
+            div.innerHTML = html;
+            container.appendChild(div);
+        }
+
+        function copy(btn, txt) {
+            navigator.clipboard.writeText(txt).then(() => {
+                let old = btn.innerText;
+                btn.innerText = "✓";
+                btn.classList.add('copied');
+                setTimeout(() => { btn.innerText = old; btn.classList.remove('copied'); }, 800);
+            });
+        }
+
+        function downloadXML() {
+            // Destructure here as well
+            const { data } = getParsedData();
+
+            if (data.length === 0) return alert("Keine Daten vorhanden.");
+
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<b:Sources xmlns:b="http://schemas.openxmlformats.org/officeDocument/2006/bibliography">\n';
+
+            data.forEach(item => {
+                let safeTag = (item.author.split(' ')[0] + item.pubY + item.title.substring(0, 5)).replace(/[^a-zA-Z0-9]/g, '');
+                const guid = Math.random().toString(36).substring(2, 15);
+                const sourceType = item.type === "Website" ? "InternetSite" : "Book";
+
+                xml += '  <b:Source>\n';
+                xml += `    <b:Tag>${safeTag}</b:Tag>\n`;
+                xml += `    <b:SourceType>${sourceType}</b:SourceType>\n`;
+                xml += `    <b:Guid>{${guid}}</b:Guid>\n`;
+
+                xml += '    <b:Author>\n      <b:NameList>\n';
+                const cleaned = item.author.replace(/\s+et\s+al\.?$/i, '').trim();
+                cleaned.split(/[,;]\s*/).forEach(auth => {
+                    let parts = auth.split(' ').filter(p => p);
+                    let last = parts.pop() || auth;
+                    let first = parts.join(' ');
+                    xml += `        <b:Person><b:Last>${escapeXml(last)}</b:Last><b:First>${escapeXml(first)}</b:First></b:Person>\n`;
+                });
+                xml += '      </b:NameList>\n    </b:Author>\n';
+
+                xml += `    <b:Title>${escapeXml(item.title)}</b:Title>\n`;
+                if (item.pubY) xml += `    <b:Year>${item.pubY}</b:Year>\n`;
+
+                if (sourceType === "InternetSite") {
+                    xml += `    <b:URL>${escapeXml(item.url)}</b:URL>\n`;
+                    xml += `    <b:ProductionCompany>${escapeXml(item.container)}</b:ProductionCompany>\n`;
+                    if (item.accY) xml += `    <b:YearAccessed>${item.accY}</b:YearAccessed><b:MonthAccessed>${item.accM}</b:MonthAccessed><b:DayAccessed>${item.accD}</b:DayAccessed>\n`;
+                } else {
+                    if (item.pages) xml += `    <b:Pages>${escapeXml(item.pages)}</b:Pages>\n`;
+                    xml += `    <b:Publisher>${escapeXml(item.container)}</b:Publisher>\n`;
+                }
+                xml += '  </b:Source>\n';
+            });
+
+            xml += '</b:Sources>';
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([xml], { type: 'text/xml' }));
+            a.download = 'Sources.xml';
+            a.click();
+        }
+
+        function escapeXml(unsafe) { return (unsafe || "").replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' })[c]); }
+    </script>
+</body>
+
+</html>
