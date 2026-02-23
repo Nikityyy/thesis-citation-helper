@@ -419,6 +419,60 @@
                 type: "Website"
             };
 
+            // === YOUTUBE MATCHING ===
+            let ytUrlIdx = parts.findIndex(p => p.startsWith('http') && (p.includes('youtube.com') || p.includes('youtu.be')));
+            if (ytUrlIdx !== -1) {
+                obj.type = "YouTube Video";
+                obj.container = "YouTube";
+                obj.url = parts[ytUrlIdx];
+                parts.splice(ytUrlIdx, 1);
+
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    if (parts[i].match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
+                        if (!obj.timeTo) obj.timeTo = parts[i];
+                        else if (!obj.timeFrom) obj.timeFrom = parts[i];
+                        parts.splice(i, 1);
+                    }
+                }
+
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    let m = parts[i].match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+                    if (m) {
+                        obj.accD = m[1];
+                        obj.accM = m[2];
+                        obj.accY = m[3];
+                        parts.splice(i, 1);
+                    } else {
+                        let m2 = parts[i].match(/(\d{1,2})\.?\s+([a-zA-ZäöüÄÖÜ]+)\s+(\d{4})/);
+                        if (m2) {
+                            obj.accD = m2[1];
+                            obj.accM = m2[2];
+                            obj.accY = m2[3];
+                            parts.splice(i, 1);
+                        }
+                    }
+                }
+
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    if (parts[i].match(/^\d{4}$/)) {
+                        obj.pubY = parts[i];
+                        parts.splice(i, 1);
+                        break;
+                    }
+                }
+
+                if (parts.length >= 2) {
+                    obj.author = parts[0];
+                    obj.title = parts[1];
+                } else if (parts.length === 1) {
+                    obj.title = parts[0];
+                    obj.author = "ohne Kanal";
+                }
+
+                return obj;
+            }
+            // ========================
+
             // Extract URL
             let urlIdx = parts.findIndex(p => p.startsWith('http') || p.startsWith('doi'));
             if (urlIdx !== -1) {
@@ -500,9 +554,23 @@
                 else if (parts.length === 2) { obj.container = parts[0]; obj.title = parts[1]; obj.author = "ohne Autor"; }
                 else { obj.title = parts[0]; obj.author = "ohne Autor"; }
             } else {
-                if (parts.length >= 3) { obj.title = parts[0]; obj.author = parts[1]; obj.container = parts[2]; }
-                else if (parts.length === 2) { obj.title = parts[0]; obj.author = parts[1]; }
-                else { obj.title = parts[0]; obj.author = "ohne Autor"; }
+                // Book or Journal Article (PDF link etc.)
+                if (parts.length >= 3) {
+                    obj.author = parts[1];
+                    obj.title = parts[0];
+                    obj.container = parts[2];
+                } else if (parts.length === 2) {
+                    obj.author = parts[1];
+                    obj.title = parts[0];
+                } else {
+                    obj.title = parts[0];
+                    obj.author = "ohne Autor";
+                }
+
+                // Check if "author" is actually the title and title is author based on standard "Title; Author;" splitting behavior from initial logic.
+                // Actually, original intended behavior was "Titel; Autor;" - wait, example:
+                // "AI-powered anti-cheat engines...; Singh, G.; World Journal..."
+                // parts[0] = Title, parts[1] = Author, parts[2] = Container. This is correct as mapped above.
             }
 
             if (obj.author && (obj.author.match(/^\d+$/) || obj.author.length < 2)) {
@@ -537,17 +605,28 @@
             let html = `<div class="card-header"><span class="header-title" title="${item.title}">${item.title}</span><span class="source-type">${item.type}</span></div>`;
             const addRow = (label, val) => {
                 if (!val) return '';
-                const safeVal = val.replace(/'/g, "\\'");
+                const safeVal = val.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 return `<div class="row"><div class="lbl">${label}</div><div class="val">${val}</div><button class="copy-btn" onclick="copy(this, '${safeVal}')">Kopie</button></div>`;
             }
-            html += addRow('Titel', item.title);
-            html += addRow('Autor', item.author);
-            if (item.container) {
-                const label = item.type === 'Website' ? 'Webseite' : 'Verlag';
-                html += addRow(label, item.container);
+
+            if (item.type === 'YouTube Video') {
+                html += addRow('Titel', item.title);
+                html += addRow('Kanal', item.author);
+                html += addRow('URL', item.url);
+                if (item.timeFrom || item.timeTo) {
+                    const timeStr = (item.timeFrom && item.timeTo) ? `${item.timeFrom}–${item.timeTo}` : (item.timeFrom || item.timeTo);
+                    html += addRow('Zeitstempel', timeStr);
+                }
+            } else {
+                html += addRow('Titel', item.title);
+                html += addRow('Autor', item.author);
+                if (item.container) {
+                    const label = item.type === 'Website' ? 'Webseite' : 'Verlag';
+                    html += addRow(label, item.container);
+                }
+                html += addRow('URL', item.url);
+                if (item.pages) html += addRow('Seiten', item.pages);
             }
-            html += addRow('URL', item.url);
-            if (item.pages) html += addRow('Seiten', item.pages);
 
             let pubY = item.pubY || item.accY || 'n.d.';
             let accY = item.accY ? `${item.accD || '??'}.${item.accM || '??'}.${item.accY}` : 'n.d.';
@@ -577,7 +656,7 @@
             data.forEach(item => {
                 let safeTag = (item.author.split(' ')[0] + item.pubY + item.title.substring(0, 5)).replace(/[^a-zA-Z0-9]/g, '');
                 const guid = Math.random().toString(36).substring(2, 15);
-                const sourceType = item.type === "Website" ? "InternetSite" : "Book";
+                const sourceType = item.type === "YouTube Video" ? "Misc" : (item.type === "Website" ? "InternetSite" : "Book");
 
                 xml += '  <b:Source>\n';
                 xml += `    <b:Tag>${safeTag}</b:Tag>\n`;
@@ -604,10 +683,32 @@
                     xml += `    <b:URL>${escapeXml(item.url)}</b:URL>\n`;
                     xml += `    <b:ProductionCompany>${escapeXml(item.container)}</b:ProductionCompany>\n`;
                     if (item.accY) xml += `    <b:YearAccessed>${item.accY}</b:YearAccessed><b:MonthAccessed>${item.accM}</b:MonthAccessed><b:DayAccessed>${item.accD}</b:DayAccessed>\n`;
+                } else if (sourceType === "Misc") {
+                    xml += `    <b:URL>${escapeXml(item.url)}</b:URL>\n`;
+                    xml += `    <b:Medium>YouTube</b:Medium>\n`;
+                    if (item.accY) xml += `    <b:YearAccessed>${item.accY}</b:YearAccessed><b:MonthAccessed>${item.accM}</b:MonthAccessed><b:DayAccessed>${item.accD}</b:DayAccessed>\n`;
                 } else {
-                    if (item.pages) xml += `    <b:Pages>${escapeXml(item.pages)}</b:Pages>\n`;
+                    if (item.url) xml += `    <b:URL>${escapeXml(item.url)}</b:URL>\n`;
                     xml += `    <b:Publisher>${escapeXml(item.container)}</b:Publisher>\n`;
                 }
+
+                let pagesStr = item.pages;
+                if (item.type === "YouTube Video" && (item.timeFrom || item.timeTo)) {
+                    pagesStr = (item.timeFrom && item.timeTo) ? `${item.timeFrom}-${item.timeTo}` : (item.timeFrom || item.timeTo);
+                } else if (pagesStr) {
+                    const match = pagesStr.match(/^(\d+)\s*-\s*(\d+)$/);
+                    if (match) {
+                        const start = parseInt(match[1], 10);
+                        const end = parseInt(match[2], 10);
+                        if (end === start + 1) {
+                            pagesStr = start + 'f';
+                        } else if (end > start + 1) {
+                            pagesStr = start + 'ff';
+                        }
+                    }
+                }
+                if (pagesStr) xml += `    <b:Pages>${escapeXml(pagesStr)}</b:Pages>\n`;
+
                 xml += '  </b:Source>\n';
             });
 

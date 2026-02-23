@@ -15,7 +15,7 @@
 
   <xsl:template name="Start">
     <xsl:choose>
-      <xsl:when test="b:Version"><xsl:text>2026.02.17</xsl:text></xsl:when>
+      <xsl:when test="b:Version"><xsl:text>2026.02.23</xsl:text></xsl:when>
       <xsl:when test="b:XslVersion"><xsl:text>2026</xsl:text></xsl:when>
       <xsl:when test="b:StyleNameLocalized"><xsl:text>HAK Steyr - By Nikita Berger</xsl:text></xsl:when>
 
@@ -180,6 +180,16 @@
                  </xsl:otherwise>
                </xsl:choose>
              </xsl:when>
+             <xsl:when test="string-length($Source/b:Pages) > 0">
+               <xsl:choose>
+                 <xsl:when test="contains($Source/b:Pages, ':')">
+                   <xsl:text>, </xsl:text><xsl:value-of select="$Source/b:Pages"/>
+                 </xsl:when>
+                 <xsl:otherwise>
+                   <xsl:text>, S. </xsl:text><xsl:value-of select="$Source/b:Pages"/>
+                 </xsl:otherwise>
+               </xsl:choose>
+             </xsl:when>
              <xsl:when test="$Source/b:SourceType = 'InternetSite' or $Source/b:SourceType = 'DocumentFromInternetSite'">
                <xsl:text>, [Online]</xsl:text>
              </xsl:when>
@@ -266,14 +276,30 @@
       </xsl:when>
       <xsl:when test="$Count = 1">
         <xsl:value-of select="translate($Persons[1]/b:Last, $lowercase, $uppercase)"/>
+        <xsl:if test="string-length($Persons[1]/b:First) > 0">
+          <xsl:text>/</xsl:text>
+          <xsl:value-of select="translate($Persons[1]/b:First, $lowercase, $uppercase)"/>
+        </xsl:if>
       </xsl:when>
       <xsl:when test="$Count = 2">
         <xsl:value-of select="translate($Persons[1]/b:Last, $lowercase, $uppercase)"/>
+        <xsl:if test="string-length($Persons[1]/b:First) > 0">
+          <xsl:text>/</xsl:text>
+          <xsl:value-of select="translate($Persons[1]/b:First, $lowercase, $uppercase)"/>
+        </xsl:if>
         <xsl:text>/</xsl:text>
         <xsl:value-of select="translate($Persons[2]/b:Last, $lowercase, $uppercase)"/>
+        <xsl:if test="string-length($Persons[2]/b:First) > 0">
+          <xsl:text>/</xsl:text>
+          <xsl:value-of select="translate($Persons[2]/b:First, $lowercase, $uppercase)"/>
+        </xsl:if>
       </xsl:when>
       <xsl:when test="$Count > 2">
         <xsl:value-of select="translate($Persons[1]/b:Last, $lowercase, $uppercase)"/>
+        <xsl:if test="string-length($Persons[1]/b:First) > 0">
+          <xsl:text>/</xsl:text>
+          <xsl:value-of select="translate($Persons[1]/b:First, $lowercase, $uppercase)"/>
+        </xsl:if>
         <xsl:text> u.a.</xsl:text>
       </xsl:when>
     </xsl:choose>
