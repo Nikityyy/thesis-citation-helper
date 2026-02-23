@@ -276,30 +276,14 @@
       </xsl:when>
       <xsl:when test="$Count = 1">
         <xsl:value-of select="translate($Persons[1]/b:Last, $lowercase, $uppercase)"/>
-        <xsl:if test="string-length($Persons[1]/b:First) > 0">
-          <xsl:text>/</xsl:text>
-          <xsl:value-of select="translate($Persons[1]/b:First, $lowercase, $uppercase)"/>
-        </xsl:if>
       </xsl:when>
       <xsl:when test="$Count = 2">
         <xsl:value-of select="translate($Persons[1]/b:Last, $lowercase, $uppercase)"/>
-        <xsl:if test="string-length($Persons[1]/b:First) > 0">
-          <xsl:text>/</xsl:text>
-          <xsl:value-of select="translate($Persons[1]/b:First, $lowercase, $uppercase)"/>
-        </xsl:if>
         <xsl:text>/</xsl:text>
         <xsl:value-of select="translate($Persons[2]/b:Last, $lowercase, $uppercase)"/>
-        <xsl:if test="string-length($Persons[2]/b:First) > 0">
-          <xsl:text>/</xsl:text>
-          <xsl:value-of select="translate($Persons[2]/b:First, $lowercase, $uppercase)"/>
-        </xsl:if>
       </xsl:when>
       <xsl:when test="$Count > 2">
         <xsl:value-of select="translate($Persons[1]/b:Last, $lowercase, $uppercase)"/>
-        <xsl:if test="string-length($Persons[1]/b:First) > 0">
-          <xsl:text>/</xsl:text>
-          <xsl:value-of select="translate($Persons[1]/b:First, $lowercase, $uppercase)"/>
-        </xsl:if>
         <xsl:text> u.a.</xsl:text>
       </xsl:when>
     </xsl:choose>

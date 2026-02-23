@@ -528,9 +528,12 @@
             // Filter out 'arXiv' text noise if present in parts
             parts = parts.filter(p => !p.toLowerCase().includes('arxiv') && !p.toLowerCase().includes('doi.org'));
 
-            // === SPECIAL HANDLING FOR ARXIV ===
-            if (obj.url.toLowerCase().includes('arxiv.org')) {
-                obj.container = "arXiv.org";
+            // === SPECIAL HANDLING FOR ARXIV & DOI ===
+            const isArxiv = obj.url.toLowerCase().includes('arxiv.org');
+            const isDoi = obj.url.toLowerCase().includes('doi.org');
+
+            if (isArxiv || isDoi) {
+                obj.container = isArxiv ? "arXiv.org" : "DOI.org";
                 // Assumes input is: Title; Author; [Year/URL]
                 if (parts.length >= 2) {
                     obj.title = parts[0];
@@ -546,7 +549,7 @@
                 }
                 return obj;
             }
-            // ==================================
+            // ========================================
 
             // Standard Assignment Logic
             if (obj.type === 'Website') {
