@@ -549,7 +549,7 @@
             html += addRow('URL', item.url);
             if (item.pages) html += addRow('Seiten', item.pages);
 
-            let pubY = item.pubY || 'n.d.';
+            let pubY = item.pubY || item.accY || 'n.d.';
             let accY = item.accY ? `${item.accD || '??'}.${item.accM || '??'}.${item.accY}` : 'n.d.';
 
             html += `<div class="dates"><div class="date-group pub"><div class="date-head">Erschienen</div><div style="text-align:center; font-weight:bold;">${pubY}</div></div><div class="date-group acc"><div class="date-head">Abruf</div><div style="text-align:center; font-weight:bold;">${accY}</div></div></div>`;
@@ -595,7 +595,10 @@
                 xml += '      </b:NameList>\n    </b:Author>\n';
 
                 xml += `    <b:Title>${escapeXml(item.title)}</b:Title>\n`;
-                if (item.pubY) xml += `    <b:Year>${item.pubY}</b:Year>\n`;
+
+                // Fallback: If no publication year, use access year
+                let exportYear = item.pubY || item.accY;
+                if (exportYear) xml += `    <b:Year>${exportYear}</b:Year>\n`;
 
                 if (sourceType === "InternetSite") {
                     xml += `    <b:URL>${escapeXml(item.url)}</b:URL>\n`;
